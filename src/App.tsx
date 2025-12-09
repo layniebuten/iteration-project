@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
+    
     <div>
       <SearchGroup/>
       <div className="flex justify-center">
@@ -38,8 +39,12 @@ function App() {
           />
         </div>
       </div>
+      <BrowserRouter>
+        <Routes path="/create-group" element ={<Button name={name} />}>
+          
+        </Routes>
+    </BrowserRouter>
     </div>
-    
   )
 }
 
