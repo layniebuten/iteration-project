@@ -11,15 +11,18 @@ import {ChevronLeft, Plus}  from 'lucide-react'
 export const CreateNewGroup = () => {
     return (
         <div>
-            <div className="flex items-center w-full ">
-            <Link to="/">
-            <ChevronLeft />
-            </Link>
-            <h1 className="text-center font-semibold">Create a New Group Trip</h1>
+            <div className="relative w-full text-xl ">
+                <Link to="/" className="absolute left px-4 py-2 pt-4 ">
+                <ChevronLeft />
+                </Link>
+                <h1 className="text-center font-medium pt-4 ">Create Adventure</h1>
             </div>
-
-            <label>Trip Name</label>   <br></br>
-            <input type="text" placeholder = ""/>
+           <h2 className="font-bold text-4 mt-6 mb-2 px-4 pl-4 text-[19px]">Create a New Adventure</h2>
+           <p className="text-4 mb-4 px-4 pl-4 text-[14px] font-medium  ">ADVENTURE NAME</p>
+        <div className="flex justify-center">
+        <input type="text" className=" w-90 rounded-xl border border-[#DEDEDE] bg-white p-4 mb-60" placeholder = ""/>
+        </div>
+        <div className="flex justify-center">
             <Button 
                 className="flex items-center gap-2 bg-[#3A7FE5] text-white px-4 py-2 rounded font-bold"
                 name= "Create New Group" 
@@ -29,6 +32,7 @@ export const CreateNewGroup = () => {
                 plusIcon={<Plus />}
                 route = "/trip-name"
             />
+            </div>
         </div>
     )
 }
