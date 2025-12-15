@@ -6,6 +6,5 @@
     "strict": true,
     "moduleResolution": "node",
     "jsx": "react-jsx",
-    // "allowImportingTsExtensions": true
   }
 }
