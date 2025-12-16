@@ -1,20 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-
-// Token Imports
-dotenv.config();
-const MONGO_TOKEN = process.env.MONGO_URL as string;
 
 // Server Setup
 const app = express();
 const PORT = 3000;
-
-mongoose.connect(MONGO_TOKEN);
-mongoose.connection.once('open', () => {
-  console.log('Successfully connected to database!');
-});
 
 // Body Parsing
 app.use(express.urlencoded({ extended: true }));

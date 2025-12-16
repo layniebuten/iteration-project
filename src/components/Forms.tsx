@@ -1,45 +1,8 @@
 import List from './List';
-// import Trips from '../../server/models';
+import trips from '../../databases/trips.json' assert { type: 'json' };
 
-interface Trips {
-  name: string;
-  people: string[];
-  budget: number;
-}
-
-// Hard-coded but reformatted to mimic the database (works)
+// Reading JSON file
 const Form = () => {
-  const trips: Trips[] = [
-    {
-      name: 'Paris',
-      people: ['Lucy', 'Larry', 'Bryan', 'Roberta'],
-      budget: 1300,
-    },
-    {
-      name: 'Tokyo',
-      people: ['Elise', 'Jordan', 'Mei'],
-      budget: 2000,
-    },
-    {
-      name: 'Cartagena',
-      people: [
-        'Lucy',
-        'Lexie',
-        'Robbi',
-        'Rosie',
-        'Ariana',
-        'Mary-Kay',
-        'Beatrice',
-      ],
-      budget: 4000,
-    },
-    {
-      name: 'Islamabad',
-      people: ['Mohamed', 'Ali', 'Mary', 'Andre', 'Tony'],
-      budget: 1800,
-    },
-  ];
-
   return (
     <>
       <div id="trips-title">
@@ -49,13 +12,17 @@ const Form = () => {
         {trips.map((trip) => {
           return (
             <button>
-              <List title={`Trip to ${trip.name}`} subtitle={`${trip.people.length} members`} amount={trip.budget} />
+              <List
+                title={`Trip to ${trip.name}`}
+                subtitle={`${trip.people.length} members`}
+                amount={trip.budget}
+              />
             </button>
-          )
+          );
         })}
       </section>
     </>
-  )
+  );
 };
 
 // Using database
