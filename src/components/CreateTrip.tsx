@@ -18,6 +18,10 @@ const CreateTrip = () => {
 
   return (
     <>
+      <div id="create-trip-title">
+        <h2>Create Adventure</h2>
+      </div>
+
       <button onClick={addTrip}>Add Trip</button>
       {/* <form id="add-trip">
         <label htmlFor="destination">Destination: </label>

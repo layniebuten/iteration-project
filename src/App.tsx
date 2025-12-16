@@ -4,42 +4,68 @@ import CreateTrip from './components/CreateTrip';
 import Requests from './components/Requests';
 import { useState } from 'react';
 
-type Screen = "list" | "create" | "details";  // use in page switcher
+type Screen = "list" | "create" | "details" | "request";  // use in page switcher
 
-const Home = () => {
-  const [page, setPage] = useState(<Trips />);
+// // first homepage attempt
+// const Home = () => {
+//   const [page, setPage] = useState(<Trips />);
 
-  function changePage() {
-    setPage(<CreateTrip />);
-    document.getElementById('new-adventure').style.display = 'none';
-  }
+//   function changePage() {
+//     setPage(<CreateTrip />);
+//     document.getElementById('new-adventure').style.display = 'none';
+//   }
 
-  return (
-    <>
-      <button id="new-adventure" onClick={changePage}>
-        + Start New Adventure
-      </button>
-      {page}
-    </>
-  );
-};
+//   return (
+//     <>
+//       <button id="new-adventure" onClick={changePage}>
+//         + Start New Adventure
+//       </button>
+//       {page}
+//     </>
+//   );
+// };
+
+
+// const App = () => {
+//   return (
+//     <>
+//       <div id="title">
+//         <h1>WalletWise</h1>
+//       </div>
+//       <Home />
+//     </>
+//   );
+// }
+
 
 const App = () => {
-  
 
   const [page, setPage] = useState<Screen>("list");  
   const [tripID, setTripID] = useState<string | null>(null);
-   
-  // display details for currently selected trip (new or pre-existing)
-  function handleSelectTrip(selectedTripID) {
-    setTripID(selectedTripID);
-    setPage("details");
-  }
 
-  // user clicks the plus button
-  function handleCreateTrip() {
-    setPage("create");
-  }
+  // handle screen changes
+  const handlePageChange = (selectedPage: Screen, selectedTripID?: string | null) => {
+    selectedTripID ? setTripID(selectedTripID) : setTripID(null);
+    setPage(selectedPage);
+  };
+   
+
+  // // display details for currently selected trip (new or pre-existing)
+  // function handleSelectTrip(selectedTripID: string | null) {
+  //   setTripID(selectedTripID);
+  //   setPage("details");
+  // }
+
+  // // user clicks the new trip button
+  // function handleCreateTrip() {
+  //   setPage("create");
+  // }
+
+  // // user clicks the new request button
+  // function handleCreateRequest() {
+  //   setPage("request");
+  // }
+
 
   // decide which page component to render based on the current page key
   let content: React.ReactNode;
@@ -47,46 +73,55 @@ const App = () => {
   if (page === "create") {  // user wants to create a new trip
     content = <CreateTrip />;
   
+  } else if (page === "request") {  // user wants to request their money from another user
+    content = <Requests />;
+  
   } else if (page === "details") {  // user wants to view a specific trip
-    content = tripID ? <Details /> : <p>No trip selected.</p>;
+    content = tripID !== null ? <Details tripID={tripID} /> : <p>No trip selected.</p>;
   
   } else {  // default (home)  -->  user is viewing all trips  ;  page === "list"
     content = (
       <>
-        <button id="new-adventure" onClick={handleCreateTrip}>
-          + Start New Adventure
-        </button>
+        <div className='create-button'>
+          <button id="new-adventure" onClick={() => handlePageChange("create")}>
+            + Start New Adventure
+          </button>
+          <button id="new-request" onClick={() => handlePageChange("request")}>
+            + New Request ($)
+          </button>
+        </div>
 
-        <Trips  />
+        <Trips onSelectTrip={(id) => handlePageChange("details", id)} />
       </>
     )
   }
 
+
   return (
-      <>
-        <div>
-          <h1>WalletWise</h1>
-        </div>
-        {content}
-      </>
-    );
+    <>
+      <div>
+        <h1>WalletWise</h1>
+      </div>
 
-    
+      <div>{
+        page === 'list' ? null
+          : (<button id="home-button" onClick={() => handlePageChange("list")}>
+            Go Home
+          </button>)
+      }</div>
 
-    
-
-  
-  // return (
-  //   <>
-  //     <div id="title">
-  //       <h1>WalletWise</h1>
-  //     </div>
-  //     <Home />
-  //   </>
-  // );
+      {content}
+    </>
+  );
 };
 
+
 export default App;
+
+
+
+
+// // depricated legacy code
 
 // const App = () => {
 //   return (
