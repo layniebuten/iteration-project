@@ -3,22 +3,24 @@ import data from '../../databases/trips.json' assert { type: 'json' };
 // Reading JSON file
 const Trips = ({ onSelectTrip }) => {
   return (
-    <>
+    <div>
       <div id="trips-title">
         <h2>Planned Trips</h2>
       </div>
       <section className="group-trips">
         {data.map((trip) => {
           return (
-            <button
+            <button id="trip-btn" 
               key={trip.id}
               onClick={() => onSelectTrip(trip.id)}
             >
+              <div id="trip-info">
               <div id="title">
                 <p>Trip to {trip.destination}</p>
               </div>
               <div id="subtitle">
                 <p>{trip.people.length} members</p>
+              </div>
               </div>
               <div id="amount">
                 <p>${trip.budget}</p>
@@ -27,7 +29,7 @@ const Trips = ({ onSelectTrip }) => {
           );
         })}
       </section>
-    </>
+    </div>
   );
 };
 
