@@ -1,14 +1,14 @@
-import trips from '../../databases/trips.json' assert { type: 'json' };
+import data from '../../databases/trips.json' assert { type: 'json' };
 
 // Reading JSON file
 const Trips = ({ onSelectTrip }) => {
   return (
     <>
       <div id="trips-title">
-        <h2>Group Trips</h2>
+        <h2>Planned Trips</h2>
       </div>
       <section className="group-trips">
-        {trips.map((trip) => {
+        {data.map((trip) => {
           return (
             <button
               key={trip.id}
