@@ -1,7 +1,7 @@
 import data from '../../databases/trips.json' assert { type: 'json' };
 
 // Reading JSON file
-const Trips = () => {
+const Trips = ({ onSelectTrip }) => {
   return (
     <>
       <div id="trips-title">
@@ -10,7 +10,10 @@ const Trips = () => {
       <section className="group-trips">
         {data.map((trip) => {
           return (
-            <button>
+            <button
+              key={trip.id}
+              onClick={() => onSelectTrip(trip.id)}
+            >
               <div id="title">
                 <p>Trip to {trip.destination}</p>
               </div>

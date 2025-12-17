@@ -20,6 +20,9 @@ const Requests = () => {
 
     return (
         <>
+            <div id="requests-title">
+                <h2>Requests</h2>
+            </div>
         </>
     )
 }

@@ -4,12 +4,30 @@ the full details of the trip, including where to, the people involved, and how p
 // import { Button } from '../components/components/Buttons';
 import { ChevronLeft, Plus } from 'lucide-react';
 // import { Link, Outlet } from 'react-router-dom';
+import trips from '../../databases/trips.json' assert { type: 'json' };
 
-const GroupTripDetails = () => {
-  return <p>Test</p>;
+const Details = ({ tripID }) => {
+  const trip = trips.find((t) => t.id === tripID);
+
+  if (!trip) return <p>Trip not found.</p>;
+
+  return (
+    <>
+      <h2>Trip to {trip.destination}</h2>
+      <p>{trip.people.length} members</p>
+      <p>Budget: ${trip.budget}</p>
+
+      <h3>Memebers</h3>
+      <ul>
+        {trip.people.map((name) => (
+          <li key={name}>{name}</li>
+        ))}
+      </ul>
+    </>
+  );
 };
 
-export default GroupTripDetails;
+export default Details;
 
 //do we also have to think about state here? ... or are we fine with hardcoding info?
 // export const GroupTripDetails = () => {
