@@ -260,8 +260,12 @@ const Details = ({ tripID, onGoToRequests }: Props) => {
           ))}
         </ul>
       </section>
+
+      {/* <br />   */}
+      <hr />
+      <br /> 
         
-      <nav id="mode-switch">
+      <nav className="btn-row" id="mode-switch">
         <button type="button" id="mode-expenses" onClick={() => setMode("expenses")}>Expenses</button>
         <button type="button" id="mode-balances" onClick={() => setMode("balances")}>Balances</button>
       </nav>

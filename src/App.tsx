@@ -82,7 +82,7 @@ const App = () => {
   } else {  // default (home)  -->  user is viewing all trips  ;  page === "list"
     content = (
       <>
-        <div className='create-button'>
+        <div className='btn-row create-button'>
           <button id="new-adventure" onClick={() => handlePageChange("create")}>
             + New Adventure
           </button>
@@ -98,20 +98,20 @@ const App = () => {
 
 
   return (
-    <>
+    <div className="app-shell">
       <div>
         <h1>WalletWise</h1>
       </div>
 
       <div>{
         page === 'list' ? null
-          : (<button id="home-button" onClick={() => handlePageChange("list")}>
+          : (<button className="btn-row" id="home-button" onClick={() => handlePageChange("list")}>
             Home
           </button>)
       }</div>
 
       {content}
-    </>
+    </div>
   );
 };
 
