@@ -24,6 +24,7 @@ type Props = {
   tripID: number;
   initialMode?: Mode;
   onGoToRequests?: () => void;
+  onDelete?: () => void;
 };
 
 function roundCents(val: number) {
@@ -35,7 +36,12 @@ function sumPays(pays: Pay[]) {
   return roundCents(sum);
 } // payments are reused in both validation and balances
 
-const Details = ({ tripID, initialMode = null, onGoToRequests }: Props) => {
+const Details = ({
+  tripID,
+  initialMode = null,
+  onGoToRequests,
+  onDelete,
+}: Props) => {
   // select trip by id from trips.json
   const trip = (trips as Trip[]).find((row) => row.id === tripID);
 
@@ -134,6 +140,15 @@ const Details = ({ tripID, initialMode = null, onGoToRequests }: Props) => {
     }
 
     return { settles, tripTotal, share, paid, net };
+  }
+
+  // function to delete a trip from the user data
+  function deleteTrip() {
+    const index = trips.findIndex((trip) => trip.id === tripID);
+    trips.splice(index, 1);
+
+    alert('Trip deleted!');
+    onDelete ? onDelete() : 'lol';
   }
 
   // get settlement results  -->  recomputed per render  ;  ok for now, use useMemo with real database or larger datasetts
@@ -437,7 +452,17 @@ const Details = ({ tripID, initialMode = null, onGoToRequests }: Props) => {
   return (
     <main id="details-page">
       <header id="trip-head">
-        <h2>Trip to {trip.destination}</h2>
+        <h2>
+          Trip to {trip.destination} <br />
+          <button
+            type="button"
+            id="delete-trip"
+            style={{ height: '1.5em', fontSize: '20px' }}
+            onClick={deleteTrip}
+          >
+            Delete
+          </button>
+        </h2>
         <p>{trip.people.length} members</p>
         <p>Budget: ${trip.budget}</p>
       </header>
@@ -451,7 +476,6 @@ const Details = ({ tripID, initialMode = null, onGoToRequests }: Props) => {
         </ul>
       </section>
 
-      {/* <br />   */}
       <hr />
       <br />
 

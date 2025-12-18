@@ -81,7 +81,7 @@ const App = () => {
     content = <Requests tripID={tripID}  onGoToTrip={() => { setDetailsMode("balances"); handlePageChange("details")}} />;
   
   } else if (page === "details") {  // user wants to view a specific trip
-    content = tripID !== null ? <Details tripID={tripID} initialMode={detailsMode} onGoToRequests={() => { handlePageChange("request") } } /> : <p>No trip selected.</p>;
+    content = tripID !== null ? <Details tripID={tripID} initialMode={detailsMode} onGoToRequests={() => { handlePageChange("request") }}  onDelete={() => { handlePageChange("list") }} /> : <p>No trip selected.</p>;
   
   } else {  // default (home)  -->  user is viewing all trips  ;  page === "list"
     content = (

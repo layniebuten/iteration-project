@@ -8,7 +8,7 @@ const Trips = ({ onSelectTrip }) => {
         <h2>Planned Trips</h2>
       </div>
       <section className="group-trips">
-        {data.map((trip) => {
+        {data.length === 0 ? <h2>No trips found. </h2> : data.map((trip) => {
           return (
             <button id="trip-btn" 
               key={trip.id}
