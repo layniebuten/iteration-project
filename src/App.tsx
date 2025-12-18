@@ -1,8 +1,9 @@
 import Trips from './components/Trips';
-import Details from './components/Details';
+import Details, { Mode } from './components/Details';
 import CreateTrip from './components/CreateTrip';
 import Requests from './components/Requests';
 import { useState } from 'react';
+import requestsJSON from '../databases/requests.json' assert { type: 'json' };
 
 type Screen = "list" | "create" | "details" | "request";  // use in page switcher
 
@@ -42,10 +43,14 @@ const App = () => {
 
   const [page, setPage] = useState<Screen>("list");  
   const [tripID, setTripID] = useState<string | null>(null);
+  const [detailsMode, setDetailsMode] = useState<Mode>(null);
 
   // handle screen changes
   const handlePageChange = (selectedPage: Screen, selectedTripID?: string | null) => {
-    selectedTripID ? setTripID(selectedTripID) : setTripID(null);
+    // don't clear trip ID on page change  -->  allow for back to trip button
+    // selectedTripID ? setTripID(selectedTripID) : setTripID(null);
+    // keep current trip ID unless a new one is defined
+    if (selectedTripID !== undefined) setTripID(selectedTripID);
     setPage(selectedPage);
   };
    
@@ -74,10 +79,10 @@ const App = () => {
     content = <CreateTrip />;
   
   } else if (page === "request") {  // user wants to request their money from another user
-    content = <Requests />;
+    content = <Requests tripID={tripID}  onGoToTrip={() => { setDetailsMode("balances"); handlePageChange("details")}} />;
   
   } else if (page === "details") {  // user wants to view a specific trip
-    content = tripID !== null ? <Details tripID={tripID} onGoToRequests={() => handlePageChange("request")} /> : <p>No trip selected.</p>;
+    content = tripID !== null ? <Details tripID={tripID} initialMode={detailsMode} onGoToRequests={() => { handlePageChange("request") } } /> : <p>No trip selected.</p>;
   
   } else {  // default (home)  -->  user is viewing all trips  ;  page === "list"
     content = (
@@ -105,7 +110,7 @@ const App = () => {
 
       <div>{
         page === 'list' ? null
-          : (<button className="btn-row" id="home-button" onClick={() => handlePageChange("list")}>
+          : (<button className="btn-row" id="home-button" onClick={() => handlePageChange("list", null)}>
             Home
           </button>)
       }</div>

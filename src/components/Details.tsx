@@ -2,7 +2,8 @@
 the full details of the trip, including where to, the people involved, and how paid off it is */
 import { useState } from 'react';
 import trips from '../../databases/trips.json' assert { type: 'json' };
-import expensesJson from '../../databases/expenses.json' assert { type: 'json' };
+import expensesJSON from '../../databases/expenses.json' assert { type: 'json' };
+import requestsJSON from '../../databases/requests.json' assert { type: 'json' };
 
 type Trip = {
   id: number;
@@ -18,8 +19,12 @@ type Exp = {
   total: number;
   payments: Pay[];
 };
-type Mode = 'expenses' | 'balances' | 'add-expense' | null;
-type Props = { tripID: number; onGoToRequests?: () => void };
+export type Mode = 'expenses' | 'balances' | 'add-expense' | null;
+type Props = {
+  tripID: number;
+  initialMode?: Mode;
+  onGoToRequests?: () => void;
+};
 
 function roundCents(val: number) {
   return Math.round(Number(val) * 100) / 100;
@@ -30,14 +35,15 @@ function sumPays(pays: Pay[]) {
   return roundCents(sum);
 } // payments are reused in both validation and balances
 
-const Details = ({ tripID, onGoToRequests }: Props) => {
+const Details = ({ tripID, initialMode=null, onGoToRequests }: Props) => {
   // select trip by id from trips.json
   const trip = (trips as Trip[]).find((row) => row.id === tripID);
+
   if (!trip) return <p>Trip not found.</p>;
 
   // grab expenses json  -->  new entries only appear in UI (no persistance)
-  const [exps, setExps] = useState<Exp[]>(expensesJson as Exp[]);
-  const [mode, setMode] = useState<Mode>(null);
+  const [exps, setExps] = useState<Exp[]>(expensesJSON as Exp[]);
+  const [mode, setMode] = useState<Mode>(initialMode);
 
   // allow multiple expand details toggled
   const [openExp, setOpenExp] = useState<Record<number, boolean>>({});
@@ -315,6 +321,11 @@ const Details = ({ tripID, onGoToRequests }: Props) => {
           {trip.people.map((name) => {
             const isOpen = !!openPerson[name];
             const rows = rowsFor(name);
+            requestsJSON.map((request) => {
+              if (tripID === request.tripID && name === request.to) {
+                rows.push({ text: `${name} owes you`, amount: request.amount });
+              }
+            });
             return (
               <div key={name} className="person-row">
                 <button
