@@ -1,5 +1,6 @@
 // Stretch feature
 import { useState } from 'react';
+import tripsData from '../../databases/trips.json' assert { type: 'json' };
 import requestsData from '../../databases/requests.json' assert { type: 'json' };
 
 // Define the shape of a payment request object
@@ -12,7 +13,7 @@ interface PaymentRequest {
   paymentInfo?: string;
 }
 
-const Requests = ({tripID, onGoToTrip}) => {
+const Requests = ({ tripID, onGoToTrip }) => {
   // State: Array to store all payment requests (the notebook)
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
 
@@ -39,7 +40,12 @@ const Requests = ({tripID, onGoToTrip}) => {
     ]);
 
     // add form data to requests json file
-    requestsData.push({ tripID: tripID, to: form.to, from: 'You', amount: parseInt(form.amount) });
+    requestsData.push({
+      tripID: tripID,
+      to: form.to,
+      from: 'You',
+      amount: parseInt(form.amount),
+    });
 
     // Clear the form for next request (erase the paper)
     setForm({ to: '', amount: '', reason: '', paymentInfo: '' });
@@ -50,18 +56,28 @@ const Requests = ({tripID, onGoToTrip}) => {
       <h2>Requests</h2>
 
       <nav>
-        <button type="button" id="back-trip" onClick={onGoToTrip}>Back To Trip</button>
+        <button type="button" id="back-trip" onClick={onGoToTrip}>
+          Back To Trip
+        </button>
       </nav>
 
       {/* Form to create new payment request */}
       <form onSubmit={handleSubmit}>
         {/* Controlled input: value from state, onChange updates state */}
-        <input
-          placeholder="To"
+        <select
+          // placeholder="To"
           value={form.to}
           onChange={(event) => setForm({ ...form, to: event.target.value })}
           required
-        />
+        >
+          <option value="">Select a person</option>
+          {tripsData.find((trip)=> trip.id === tripID).people.map((member, index) => (
+            <option key={index} value={member}>
+              {member}
+            </option>
+          ))}
+        </select>
+
         <input
           type="number"
           placeholder="Amount"

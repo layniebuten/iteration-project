@@ -35,7 +35,7 @@ function sumPays(pays: Pay[]) {
   return roundCents(sum);
 } // payments are reused in both validation and balances
 
-const Details = ({ tripID, initialMode=null, onGoToRequests }: Props) => {
+const Details = ({ tripID, initialMode = null, onGoToRequests }: Props) => {
   // select trip by id from trips.json
   const trip = (trips as Trip[]).find((row) => row.id === tripID);
 

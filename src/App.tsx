@@ -3,7 +3,6 @@ import Details, { Mode } from './components/Details';
 import CreateTrip from './components/CreateTrip';
 import Requests from './components/Requests';
 import { useState } from 'react';
-import requestsJSON from '../databases/requests.json' assert { type: 'json' };
 
 type Screen = "list" | "create" | "details" | "request";  // use in page switcher
 
@@ -90,9 +89,6 @@ const App = () => {
         <div className='btn-row create-button'>
           <button id="new-adventure" onClick={() => handlePageChange("create")}>
             + New Adventure
-          </button>
-          <button id="new-request" onClick={() => handlePageChange("request")}>
-            + New Request
           </button>
         </div>
 
