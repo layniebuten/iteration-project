@@ -212,8 +212,8 @@ const Details = ({ tripID, onGoToRequests }: Props) => {
       </header>
 
       {tripExps.length === 0 ? <p>No expenses yet.</p> : (<>
-        <br></br>
-        <br></br>
+        <br />
+        <br />
         <section className="expenses-list">
           {tripExps.map((expRow) => {
             const isOpen = !!openExp[expRow.id];
@@ -244,19 +244,32 @@ const Details = ({ tripID, onGoToRequests }: Props) => {
   }
 
   
-  return (<main id="details-page">
-    <header id="trip-head">
-      <h2>Trip to {trip.destination}</h2>
-      <p>{trip.people.length} members</p>
-      <p>Budget: ${trip.budget}</p>
+    return (
+    <main id="details-page">
+      <header id="trip-head">
+        <h2>Trip to {trip.destination}</h2>
+        <p>{trip.people.length} members</p>
+        <p>Budget: ${trip.budget}</p>
+      </header>
 
-      <h3>Members</h3>
-      <ul>
-        {trip.people.map((name) => (
-          <li key={name}>{name}</li>
-        ))}
-      </ul>
-    </>
+      <section id="members">
+        <h3>Members</h3>
+        <ul>
+          {trip.people.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
+      </section>
+        
+      <nav id="mode-switch">
+        <button type="button" id="mode-expenses" onClick={() => setMode("expenses")}>Expenses</button>
+        <button type="button" id="mode-balances" onClick={() => setMode("balances")}>Balances</button>
+      </nav>
+
+      <section id="details-panel">
+        {panel}
+      </section>
+    </main>
   );
 };
 
