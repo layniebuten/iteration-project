@@ -77,7 +77,7 @@ const App = () => {
     content = <Requests />;
   
   } else if (page === "details") {  // user wants to view a specific trip
-    content = tripID !== null ? <Details tripID={tripID} /> : <p>No trip selected.</p>;
+    content = tripID !== null ? <Details tripID={tripID} onGoToRequests={() => handlePageChange("request")} /> : <p>No trip selected.</p>;
   
   } else {  // default (home)  -->  user is viewing all trips  ;  page === "list"
     content = (
@@ -106,7 +106,7 @@ const App = () => {
       <div>{
         page === 'list' ? null
           : (<button id="home-button" onClick={() => handlePageChange("list")}>
-            Go Home
+            Home
           </button>)
       }</div>
 

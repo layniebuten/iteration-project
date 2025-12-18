@@ -15,7 +15,7 @@ const Trips = ({ onSelectTrip }) => {
               onClick={() => onSelectTrip(trip.id)}
             >
               <div id="title">
-                <p>Trip to {trip.destination}</p>
+                <h3>Trip to {trip.destination}</h3>
               </div>
               <div id="subtitle">
                 <p>{trip.people.length} members</p>
