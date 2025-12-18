@@ -77,17 +77,17 @@ const App = () => {
     content = <Requests />;
   
   } else if (page === "details") {  // user wants to view a specific trip
-    content = tripID !== null ? <Details tripID={tripID} /> : <p>No trip selected.</p>;
+    content = tripID !== null ? <Details tripID={tripID} onGoToRequests={() => handlePageChange("request")} /> : <p>No trip selected.</p>;
   
   } else {  // default (home)  -->  user is viewing all trips  ;  page === "list"
     content = (
       <>
-        <div className='create-button'>
+        <div className='btn-row create-button'>
           <button id="new-adventure" onClick={() => handlePageChange("create")}>
-            + Start New Adventure
+            + New Adventure
           </button>
           <button id="new-request" onClick={() => handlePageChange("request")}>
-            + New Request ($)
+            + New Request
           </button>
         </div>
 
@@ -98,20 +98,20 @@ const App = () => {
 
 
   return (
-    <>
+    <div className="app-shell">
       <div>
         <h1>WalletWise</h1>
       </div>
 
       <div>{
         page === 'list' ? null
-          : (<button id="home-button" onClick={() => handlePageChange("list")}>
-            Go Home
+          : (<button className="btn-row" id="home-button" onClick={() => handlePageChange("list")}>
+            Home
           </button>)
       }</div>
 
       {content}
-    </>
+    </div>
   );
 };
 

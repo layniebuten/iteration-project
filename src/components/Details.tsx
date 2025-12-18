@@ -2,32 +2,288 @@
 the full details of the trip, including where to, the people involved, and how paid off it is */
 
 // import { Button } from '../components/components/Buttons';
-import { ChevronLeft, Plus } from 'lucide-react';
+// import { ChevronLeft, Plus } from 'lucide-react';
 // import { Link, Outlet } from 'react-router-dom';
-import trips from '../../databases/trips.json' assert { type: 'json' };
+import { useState } from "react";
+import trips from "../../databases/trips.json" assert { type: "json" };
+import expensesJson from "../../databases/expenses.json" assert { type: "json" };
 
-const Details = ({ tripID }) => {
-  const trip = trips.find((t) => t.id === tripID);
+type Trip = { id: number; destination: string; people: string[]; budget: number };
+type Pay = { name: string; amount: number };
+type Exp = { id: number; trip_id: number; title: string; total: number; payments: Pay[] };
+type Mode = "expenses" | "balances" | "add-expense" | null;
+type Props = { tripID: number; onGoToRequests?: () => void };
 
+function roundCents(val: number) { return Math.round(Number(val) * 100) / 100; } // cents stay stable so totals and settlements do not drift
+function sumPays(pays: Pay[]) { let sum = 0; for (const pay of pays) sum += Number(pay.amount) || 0; return roundCents(sum); } // payments are reused in both validation and balances
+
+const Details = ({ tripID, onGoToRequests }: Props) => {
+  // select trip by id from trips.json
+  const trip = (trips as Trip[]).find((row) => row.id === tripID);
   if (!trip) return <p>Trip not found.</p>;
 
-  return (
-    <>
-      <h2>Trip to {trip.destination}</h2>
-      <p>{trip.people.length} members</p>
-      <p>Budget: ${trip.budget}</p>
+  // grab expenses json  -->  new entries only appear in UI (no persistance)
+  const [exps, setExps] = useState<Exp[]>(expensesJson as Exp[]);
+  const [mode, setMode] = useState<Mode>(null);
 
-      <h3>Memebers</h3>
-      <ul>
-        {trip.people.map((name) => (
-          <li key={name}>{name}</li>
-        ))}
-      </ul>
-    </>
+  // allow multiple expand details toggled
+  const [openExp, setOpenExp] = useState<Record<number, boolean>>({});
+  const [openPerson, setOpenPerson] = useState<Record<string, boolean>>({});
+
+  // form typing and validation  -->  keep all input fields as strings
+  const [formAmount, setFormAmount] = useState("");
+  const [formTitle, setFormTitle] = useState("");
+  const [formPay, setFormPay] = useState<Record<string, string>>({});
+  const [errs, setErrs] = useState<string[]>([]);
+
+  // only need expenses for the selected trip
+  const tripExps = exps.filter((row) => row.trip_id === trip.id);
+
+  // helper  -->  clicking the active tab hides the panel, clicking another tab swaps panels
+  function toggleMode(next: Mode) { setMode((prev) => (prev === next ? null : next)); }
+  // helper  -->  clear the add-expense form
+  function resetForm() { setFormAmount(""); setFormTitle(""); setFormPay({}); setErrs([]); }
+
+  // toggle expands on / off
+  function toggleExp(expId: number) { setOpenExp((prev) => ({ ...prev, [expId]: !prev[expId] })); }
+  function togglePerson(name: string) { setOpenPerson((prev) => ({ ...prev, [name]: !prev[name] })); }
+
+  // settlement math (greedy algo)  -->  split total trip spend evenly, then decide who pays who (paid minus share)
+  function calcSettle() {
+    // calc total spend  -->  sum trip expenses
+    const memberCount = trip.people.length;
+    const tripTotal = roundCents(tripExps.reduce((sum, row) => sum + Number(row.total || 0), 0));
+
+    // share per person  -->  equal split (balances view)
+    const share = memberCount === 0 ? 0 : roundCents(tripTotal / memberCount);
+
+    // track per person total paid  -->  compute net
+    const paid: Record<string, number> = {};
+    for (const name of trip.people) paid[name] = 0;
+
+    // sum paid per expense  -->  ignore non-members
+    for (const expRow of tripExps) for (const pay of expRow.payments) if (paid[pay.name] !== undefined) paid[pay.name] = roundCents(paid[pay.name] + Number(pay.amount || 0));
+
+    // net  -->  positive: overpaid (creditors)  ;  negative: underpaid (debtors)
+    const net: Record<string, number> = {};
+    for (const name of trip.people) net[name] = roundCents((paid[name] || 0) - share);
+    const creditors: { name: string; amount: number }[] = [];
+    const debtors: { name: string; amount: number }[] = [];
+    for (const [name, netamount] of Object.entries(net)) { 
+      if (netamount > 0) creditors.push({ name, amount: roundCents(netamount) });
+      if (netamount < 0) debtors.push({ name, amount: roundCents(Math.abs(netamount)) });
+    }
+
+    // settlements  -->  match debtors to creditors until everyone is balanced out
+    const settles: { from: string; to: string; amount: number }[] = [];
+    let debtorIdx = 0, creditorIdx = 0;
+
+    while (debtorIdx < debtors.length && creditorIdx < creditors.length) {
+      const debtor = debtors[debtorIdx];
+      const creditor = creditors[creditorIdx];
+
+      // payment amount  -->  smaller remaining balance between the two sides
+      const amount = roundCents(Math.min(debtor.amount, creditor.amount));
+      settles.push({ from: debtor.name, to: creditor.name, amount });
+
+      // reduce balances as payments are assigned
+      debtor.amount = roundCents(debtor.amount - amount);
+      creditor.amount = roundCents(creditor.amount - amount);
+
+      if (debtor.amount === 0) debtorIdx++;
+      if (creditor.amount === 0) creditorIdx++;
+    }
+
+    return { settles, tripTotal, share, paid, net };
+  }
+
+  // get settlement results  -->  recomputed per render  ;  ok for now, use useMemo with real database or larger datasetts
+  const { settles, tripTotal, share, paid, net } = calcSettle();
+
+  // expenses vs budget  -->  shown next to total spend
+  const budgetDelta = roundCents(tripTotal - Number(trip.budget || 0));
+  const budgetText = budgetDelta > 0 ? `Over Budget:  $${roundCents(budgetDelta).toFixed(2)}` : `Under Budget:  $${roundCents(Math.abs(budgetDelta)).toFixed(2)}`;
+
+  // phrase rows around the expanded person (list items)
+  function rowsFor(name: string) {
+    const rows: { text: string; amount: number }[] = [];
+    for (const row of settles) { if (row.to === name) rows.push({ text: `${row.from} owes ${name}`, amount: row.amount }); if (row.from === name) rows.push({ text: `${name} owes ${row.to}`, amount: row.amount }); }
+    return rows;
+  }
+
+  // helper  -->  add expense form validate and save
+  function submitExp() {
+    const nextErrs: string[] = [];
+    const total = Number(formAmount);
+
+    // validate inputs
+    if (!formTitle.trim()) nextErrs.push("Description is required.");
+    if (!Number.isFinite(total) || total <= 0) nextErrs.push("Amount must be a number greater than 0.");
+
+    // only save positive payer input amounts
+    const pays: Pay[] = [];
+    for (const name of trip.people) {
+      const raw = formPay[name];
+      if (!raw) continue;
+      const amount = Number(raw);
+      if (!Number.isFinite(amount) || amount <= 0) continue;
+      pays.push({ name, amount: roundCents(amount) });
+    }
+
+    // validate payment amounts against total cost
+    if (pays.length === 0) nextErrs.push("At least one member must pay a positive amount.");
+    const payTotal = sumPays(pays);
+    if (Number.isFinite(total) && pays.length > 0 && roundCents(payTotal) !== roundCents(total)) nextErrs.push(`Amount Total Error: \n    payments sum = $${roundCents(payTotal).toFixed(2)}`);
+    if (nextErrs.length > 0) { setErrs(nextErrs); return; }
+
+    // get new expense ids (avoid duplicates)
+    const maxId = exps.reduce((maxSoFar, row) => Math.max(maxSoFar, row.id), -1);
+    const newExp: Exp = { id: maxId + 1, trip_id: trip.id, title: formTitle.trim(), total: roundCents(total), payments: pays };
+
+    // prepend new expense  -->  view entry without scrolling down
+    setExps((prev) => [newExp, ...prev]);
+    toggleMode("expenses");
+    resetForm();
+  }
+
+  
+  // mode switcher  -->  which component shows on the second half on the page
+  let panel: React.ReactNode = null;
+
+  if (mode === "add-expense") {
+    panel = (<>
+      <header className="panel-head"><h3 id="add-expense-title">Add Expense</h3></header>
+      {errs.length > 0 && (<div id="form-errors"><p>Fix these:</p><ul>{errs.map((err) => <li key={err}>{err}</li>)}</ul></div>)}
+      <div className="form-row"><label>Amount: <input value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="e.g. 250" /></label></div>
+      <div className="form-row"><label>Description: <input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder="e.g. hotel" /></label></div>
+      <div className="form-row">Paid By
+        <ul>{trip.people.map((name) => (<li key={name}><label>{name}: <input value={formPay[name] ?? ""} onChange={(e) => setFormPay((prev) => ({ ...prev, [name]: e.target.value }))} placeholder="0" /></label></li>))}</ul>
+      </div>
+      <div className="form-actions">
+        <button type="button" id="discard-expense" onClick={() => { resetForm(); toggleMode("expenses"); }}>Discard</button>
+        <button type="button" id="submit-expense" onClick={submitExp}>Add Expense</button>
+      </div>
+    </>);
+  
+  } else if (mode === "balances") {
+    panel = (<>
+      <header className="panel-head">
+        <h3 id="balances-title">Balances</h3>
+        <button type="button" id="go-requests" onClick={() => { if (onGoToRequests) onGoToRequests(); }} >Requests</button>
+      </header>
+      
+      <section id="trip-breakdown">
+        <p id="trip-total">Trip Total: ${roundCents(tripTotal).toFixed(2)} | {budgetText}</p>
+        <p id="trip-share">Per Person: ${roundCents(share).toFixed(2)}</p>
+      </section>
+
+      <section className="balances-list">
+        {trip.people.map((name) => {
+          const isOpen = !!openPerson[name];
+          const rows = rowsFor(name);
+          return (
+            <div key={name} className="person-row">
+              <button type="button" className="person-btn" onClick={() => togglePerson(name)}>
+                <div className="person-title"><h4>{name}</h4></div>
+              </button>
+
+              {isOpen && (
+                <div className="person-details">
+                  <p>paid: ${roundCents(paid[name] || 0).toFixed(2)} | net: ${roundCents(net[name] || 0).toFixed(2)}</p>
+                  {rows.length === 0 ? <p>No balances for {name}.</p> : (
+                    <ul className="person-rows">
+                      {rows.map((row) => (<li key={`${name}-${row.text}-${row.amount}`}>{row.text} ${roundCents(row.amount).toFixed(2)}</li>))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </section>
+    </>);
+  
+  } else if (mode === "expenses") {
+    // can also be made default 
+    panel = (<>
+      <header className="panel-head">
+        <h3 id="expenses-title">Expenses</h3>
+        <button type="button" id="add-expense" onClick={() => { toggleMode("add-expense"); resetForm(); }}>+ Add Expense</button>
+      </header>
+
+      {tripExps.length === 0 ? <p>No expenses yet.</p> : (<>
+        <br />
+        <br />
+        <section className="expenses-list">
+          {tripExps.map((expRow) => {
+            const isOpen = !!openExp[expRow.id];
+            const paidBy = expRow.payments.map((pay) => pay.name).join(", ");
+            return (
+              <div key={expRow.id} className="expense-row">
+                <button type="button" className="expense-btn" onClick={() => toggleExp(expRow.id)}>
+                  <div className="expense-top">
+                    <div className="expense-title"><h4>{expRow.title}</h4></div>
+                    <div className="expense-amount"><p>${roundCents(expRow.total).toFixed(2)}</p></div>
+                  </div>
+                  <div className="expense-sub"><p>Paid by {paidBy || "—"}</p></div>
+                </button>
+
+                {isOpen && (
+                  <div className="expense-details">
+                    <ul className="expense-pays">
+                      {expRow.payments.map((pay) => (<li key={`${expRow.id}-${pay.name}`}>{pay.name} → ${roundCents(pay.amount).toFixed(2)}</li>))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      </>)}
+    </>);
+  }
+
+  
+    return (
+    <main id="details-page">
+      <header id="trip-head">
+        <h2>Trip to {trip.destination}</h2>
+        <p>{trip.people.length} members</p>
+        <p>Budget: ${trip.budget}</p>
+      </header>
+
+      <section id="members">
+        <h3>Members</h3>
+        <ul>
+          {trip.people.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
+      </section>
+
+      {/* <br />   */}
+      <hr />
+      <br /> 
+        
+      <nav className="btn-row" id="mode-switch">
+        <button type="button" id="mode-expenses" onClick={() => setMode("expenses")}>Expenses</button>
+        <button type="button" id="mode-balances" onClick={() => setMode("balances")}>Balances</button>
+      </nav>
+
+      <section id="details-panel">
+        {panel}
+      </section>
+    </main>
   );
 };
 
+
+
+
 export default Details;
+
+
+
 
 //do we also have to think about state here? ... or are we fine with hardcoding info?
 // export const GroupTripDetails = () => {
